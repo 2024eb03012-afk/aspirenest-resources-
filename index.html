@@ -250,44 +250,173 @@
     .can-list{columns:1}
     .prop dt{width:96px}
     .page{padding:0 18px 100px}
-  .cta-banner {
+  /* ---------- Interactive Book a Call Section ---------- */
+  .book-call-card {
+    position: relative;
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.07) 0%, rgba(35, 131, 226, 0.08) 50%, rgba(37, 211, 102, 0.04) 100%);
+    border: 1px solid rgba(37, 211, 102, 0.28);
+    border-radius: 12px;
+    padding: 22px 26px;
+    margin: 24px 0 30px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 16px;
-    background: linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(35, 131, 226, 0.12) 100%);
-    border: 1px solid rgba(37, 211, 102, 0.35);
-    border-radius: 8px;
-    padding: 14px 20px;
-    margin: 20px 0 24px;
-    flex-wrap: wrap;
+    gap: 20px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    overflow: hidden;
   }
-  .cta-banner-text {
-    font-size: 15px;
-    font-weight: 600;
+  html[data-theme="dark"] .book-call-card {
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(35, 131, 226, 0.1) 100%);
+    border-color: rgba(37, 211, 102, 0.3);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+  }
+  .book-call-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, #25d366, #2383e2, #25d366);
+    background-size: 200% 100%;
+    animation: shimmerGlow 4s linear infinite;
+  }
+  @keyframes shimmerGlow {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 200% 0%; }
+  }
+  .book-call-card:hover {
+    transform: translateY(-2px);
+    border-color: rgba(37, 211, 102, 0.5);
+    box-shadow: 0 8px 30px rgba(37, 211, 102, 0.15);
+  }
+  .book-call-content {
+    flex: 1;
+    min-width: 260px;
+  }
+  .book-call-title {
+    font-size: 17.5px;
+    font-weight: 700;
     color: var(--text);
+    margin: 0 0 6px 0;
     display: flex;
     align-items: center;
     gap: 8px;
+    letter-spacing: -0.01em;
   }
-  .cta-btn {
+  .book-call-sub {
+    font-size: 13.5px;
+    color: var(--muted);
+    margin: 0 0 12px 0;
+    line-height: 1.45;
+  }
+  .book-call-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .call-badge {
     display: inline-flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 11px;
+    border-radius: 20px;
+    background: var(--bg);
+    border: 1px solid var(--line-strong);
+    color: var(--muted);
+    cursor: default;
+    transition: all 0.2s ease;
+  }
+  .call-badge:hover {
+    border-color: var(--blue);
+    color: var(--text);
+    transform: scale(1.03);
+  }
+  .call-badge.active-badge {
+    border-color: #25d366;
+    color: #25d366;
+    background: rgba(37, 211, 102, 0.08);
+  }
+  .status-dot {
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
     background: #25d366;
+    display: inline-block;
+    box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.25);
+    animation: statusPulse 2s infinite;
+  }
+  @keyframes statusPulse {
+    0% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.6); }
+    70% { box-shadow: 0 0 0 6px rgba(37, 211, 102, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(37, 211, 102, 0); }
+  }
+  .book-call-action {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-none: true;
+  }
+  .call-btn-interactive {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: linear-gradient(135deg, #25d366 0%, #128c4a 100%);
     color: #ffffff !important;
     text-decoration: none !important;
     font-weight: 600;
-    font-size: 14px;
-    padding: 9px 18px;
-    border-radius: 6px;
-    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+    font-size: 14.5px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(37, 211, 102, 0.35);
+    transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
   }
-  .cta-btn:hover {
-    background: #20bd5a;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.5);
+  .call-btn-interactive:hover {
+    background: linear-gradient(135deg, #20bd5a 0%, #0e783e 100%);
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 6px 22px rgba(37, 211, 102, 0.48);
+  }
+  .call-btn-interactive:active {
+    transform: translateY(0) scale(0.99);
+  }
+  .call-btn-icon {
+    display: flex;
+    align-items: center;
+    transition: transform 0.25s ease;
+  }
+  .call-btn-interactive:hover .call-btn-icon {
+    transform: rotate(-8deg) scale(1.1);
+  }
+  .call-btn-arrow {
+    transition: transform 0.25s ease;
+  }
+  .call-btn-interactive:hover .call-btn-arrow {
+    transform: translateX(4px);
+  }
+  .call-note {
+    font-size: 11.5px;
+    color: var(--faint);
+    text-align: right;
+  }
+  @media (max-width: 640px) {
+    .book-call-card {
+      flex-direction: column;
+      align-items: stretch;
+      padding: 18px 20px;
+    }
+    .book-call-action {
+      align-items: stretch;
+    }
+    .call-btn-interactive {
+      width: 100%;
+    }
+    .call-note {
+      text-align: center;
+    }
   }
 </style>
 </head>
@@ -331,14 +460,28 @@
       <h1>Build a WhatsApp AI agent with Claude Code</h1>
       <p class="dek">A customer-facing assistant that answers questions, remembers the conversation, checks real availability and books appointments — running on your own server, connected straight to the Meta WhatsApp Cloud API.</p>
 
-      <div class="cta-banner">
-        <div class="cta-banner-text">
-          <span>🚀 Want WhatsApp AI Agent for your business?</span>
+      <div class="book-call-card">
+        <div class="book-call-content">
+          <h3 class="book-call-title">
+            Want a WhatsApp AI Agent for your business?
+          </h3>
+          <p class="book-call-sub">Book a 1-on-1 discovery call to discuss your business requirements, workflow automation, and custom AI agent setup.</p>
+          <div class="book-call-badges">
+            <span class="call-badge active-badge"><span class="status-dot"></span> Available slots open</span>
+            <span class="call-badge">⏱️ 30 Min Strategy</span>
+            <span class="call-badge">🎯 Custom Roadmap</span>
+          </div>
         </div>
-        <a href="https://cal.com/punit-gupta-grdgmd/30min" target="_blank" rel="noopener noreferrer" class="cta-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-          Book a call with me
-        </a>
+        <div class="book-call-action">
+          <a href="https://cal.com/punit-gupta-grdgmd/30min" target="_blank" rel="noopener noreferrer" class="call-btn-interactive">
+            <span class="call-btn-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+            </span>
+            <span>Book a Call with Me</span>
+            <span class="call-btn-arrow">→</span>
+          </a>
+          <span class="call-note">Free 30-min strategy session</span>
+        </div>
       </div>
 
       <dl class="props">

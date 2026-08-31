@@ -250,7 +250,44 @@
     .can-list{columns:1}
     .prop dt{width:96px}
     .page{padding:0 18px 100px}
-    .step-body{padding-left:26px}
+  .cta-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    background: linear-gradient(135deg, rgba(37, 211, 102, 0.12) 0%, rgba(35, 131, 226, 0.12) 100%);
+    border: 1px solid rgba(37, 211, 102, 0.35);
+    border-radius: 8px;
+    padding: 14px 20px;
+    margin: 20px 0 24px;
+    flex-wrap: wrap;
+  }
+  .cta-banner-text {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .cta-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #25d366;
+    color: #ffffff !important;
+    text-decoration: none !important;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 9px 18px;
+    border-radius: 6px;
+    transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 8px rgba(37, 211, 102, 0.35);
+  }
+  .cta-btn:hover {
+    background: #20bd5a;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(37, 211, 102, 0.5);
   }
 </style>
 </head>
@@ -293,6 +330,16 @@
       <div class="page-icon">💬</div>
       <h1>Build a WhatsApp AI agent with Claude Code</h1>
       <p class="dek">A customer-facing assistant that answers questions, remembers the conversation, checks real availability and books appointments — running on your own server, connected straight to the Meta WhatsApp Cloud API.</p>
+
+      <div class="cta-banner">
+        <div class="cta-banner-text">
+          <span>🚀 Want WhatsApp AI Agent for your business?</span>
+        </div>
+        <a href="https://cal.com/punit-gupta-grdgmd/30min" target="_blank" rel="noopener noreferrer" class="cta-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
+          Book a call with me
+        </a>
+      </div>
 
       <dl class="props">
         <div class="prop"><dt>Stack</dt><dd><span class="pill">Meta Cloud API</span><span class="pill">OpenRouter</span><span class="pill">VPS</span></dd></div>

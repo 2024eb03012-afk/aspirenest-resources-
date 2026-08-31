@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Build a WhatsApp AI Agent with Claude Code</title>
+<style>
+  :root{
+    --bg:#ffffff;
+    --sidebar:#fbfbfa;
+    --text:#37352f;
+    --muted:#787774;
+    --faint:#9b9a97;
+    --line:rgba(55,53,47,.09);
+    --line-strong:rgba(55,53,47,.16);
+    --hover:rgba(55,53,47,.06);
+    --blue:#2383e2;
+    --blue-soft:#e7f3f8;
+    --yellow-soft:#fbf3db;
+    --red-soft:#fdebec;
+    --gray-soft:#f1f1ef;
+    --green:#448361;
+    --code-bg:#f7f6f3;
+    --code-text:#eb5757;
+    --shadow:0 1px 2px rgba(15,15,15,.06);
+    --radius:4px;
+    --mono:"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:-apple-system,BlinkMacSystemFont,"Segoe UI","Inter",Helvetica,"Apple Color Emoji",Arial,sans-serif;
+  }
+  html[data-theme="dark"]{
+    --bg:#191919;
+    --sidebar:#202020;
+    --text:#d4d4d4;
+    --muted:#9b9a97;
+    --faint:#6f6f6f;
+    --line:rgba(255,255,255,.09);
+    --line-strong:rgba(255,255,255,.16);
+    --hover:rgba(255,255,255,.055);
+    --blue:#529cca;
+    --blue-soft:#1b3a4d;
+    --yellow-soft:#3a3229;
+    --red-soft:#3d2626;
+    --gray-soft:#272727;
+    --green:#7bab86;
+    --code-bg:#252525;
+    --code-text:#ff7369;
+    --shadow:0 1px 2px rgba(0,0,0,.4);
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  @media (prefers-reduced-motion:reduce){
+    html{scroll-behavior:auto}
+    *{transition:none!important;animation:none!important}
+  }
+  body{
+    margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);
+    font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+  }
+  a{color:inherit}
+  button{font-family:inherit;color:inherit;cursor:pointer}
+  :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:3px}
+
+  /* ---------- shell ---------- */
+  .shell{display:flex;min-height:100vh}
+  .sidebar{
+    width:272px;flex:none;background:var(--sidebar);border-right:1px solid var(--line);
+    height:100vh;position:sticky;top:0;display:flex;flex-direction:column;
+  }
+  .sb-head{padding:14px 14px 10px;border-bottom:1px solid var(--line)}
+  .workspace{display:flex;align-items:center;gap:8px;padding:6px;border-radius:var(--radius)}
+  .ws-icon{width:22px;height:22px;border-radius:4px;background:#25d366;display:grid;place-items:center;font-size:13px;flex:none}
+  .ws-name{font-size:14px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .ws-sub{font-size:11px;color:var(--faint);margin-top:1px}
+  .search{
+    margin-top:8px;display:flex;align-items:center;gap:7px;padding:5px 8px;background:var(--bg);
+    border:1px solid var(--line-strong);border-radius:var(--radius);
+  }
+  .search input{border:0;background:none;outline:none;font-size:13.5px;color:var(--text);width:100%;padding:1px 0}
+  .search svg{flex:none;opacity:.45}
+  .progress-wrap{padding:12px 20px 12px;border-bottom:1px solid var(--line)}
+  .progress-top{display:flex;justify-content:space-between;font-size:11.5px;color:var(--muted);margin-bottom:6px}
+  .bar{height:4px;border-radius:3px;background:var(--hover);overflow:hidden}
+  .bar span{display:block;height:100%;width:0;background:var(--green);transition:width .25s ease}
+  .toc{overflow-y:auto;padding:8px 8px 40px;flex:1}
+  .toc a{
+    display:block;text-decoration:none;font-size:13.5px;color:var(--muted);
+    padding:4px 10px;border-radius:var(--radius);line-height:1.35;
+  }
+  .toc a:hover{background:var(--hover);color:var(--text)}
+  .toc a.top{font-weight:600;color:var(--text);margin-top:8px}
+  .toc a.sub{padding-left:22px;font-size:13px}
+  .toc a.active{background:var(--hover);color:var(--text);font-weight:600}
+  .toc a.done::after{content:"✓";float:right;color:var(--green);font-size:11px}
+  .sb-foot{padding:8px 14px 14px;border-top:1px solid var(--line);display:flex;gap:6px}
+  .ghost{
+    border:1px solid var(--line-strong);background:transparent;border-radius:var(--radius);
+    font-size:12.5px;padding:5px 9px;color:var(--muted);
+  }
+  .ghost:hover{background:var(--hover);color:var(--text)}
+
+  main{flex:1;min-width:0}
+  .topbar{
+    position:sticky;top:0;z-index:20;background:var(--bg);border-bottom:1px solid var(--line);
+    display:flex;align-items:center;gap:10px;padding:9px 16px;font-size:13.5px;color:var(--muted);
+  }
+  .crumb{display:flex;align-items:center;gap:6px;overflow:hidden;white-space:nowrap}
+  .crumb b{font-weight:500;color:var(--text)}
+  .menu-btn{display:none;border:1px solid var(--line-strong);background:none;border-radius:var(--radius);padding:4px 8px}
+
+  .cover{height:150px;background:linear-gradient(120deg,#0b3d2c 0%,#128c4a 45%,#25d366 100%)}
+  html[data-theme="dark"] .cover{filter:saturate(.8) brightness(.75)}
+  .page{max-width:790px;margin:0 auto;padding:0 24px 120px}
+  .page-icon{
+    width:66px;height:66px;border-radius:12px;background:var(--bg);border:1px solid var(--line);
+    display:grid;place-items:center;font-size:36px;margin-top:-40px;box-shadow:var(--shadow);
+  }
+  h1{font-size:38px;line-height:1.15;letter-spacing:-.02em;margin:16px 0 6px;font-weight:700}
+  .dek{color:var(--muted);font-size:16px;margin:0 0 18px;max-width:62ch}
+  .props{border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:10px 0;margin-bottom:34px}
+  .prop{display:flex;gap:12px;font-size:13.5px;padding:4px 0;align-items:baseline}
+  .prop dt{width:120px;flex:none;color:var(--faint)}
+  .prop dd{margin:0;color:var(--text)}
+  .pill{
+    display:inline-block;background:var(--gray-soft);border-radius:3px;padding:1px 7px;
+    font-size:12px;margin-right:5px;color:var(--muted)
+  }
+
+  h2{font-size:25px;letter-spacing:-.01em;margin:52px 0 4px;font-weight:700;scroll-margin-top:70px}
+  h3{font-size:18px;margin:30px 0 4px;font-weight:600}
+  .lede{color:var(--muted);margin:2px 0 18px}
+  p{margin:.6em 0}
+  ul,ol{margin:.6em 0;padding-left:24px}
+  li{margin:.25em 0}
+  li::marker{color:var(--faint)}
+
+  /* ---------- blocks ---------- */
+  .callout{
+    display:flex;gap:10px;padding:14px 16px;border-radius:var(--radius);margin:16px 0;font-size:15px;
+    background:var(--gray-soft);border:1px solid var(--line);
+  }
+  .callout .ci{flex:none;font-size:16px;line-height:1.4}
+  .callout.info{background:var(--blue-soft)}
+  .callout.warn{background:var(--yellow-soft)}
+  .callout.stop{background:var(--red-soft)}
+  .callout p{margin:0}
+  .callout p+p{margin-top:.5em}
+
+  pre{margin:14px 0}
+  .codeblock{position:relative;background:var(--code-bg);border:1px solid var(--line);border-radius:var(--radius);margin:14px 0}
+  .cb-head{
+    display:flex;justify-content:space-between;align-items:center;gap:8px;
+    padding:6px 8px 6px 12px;border-bottom:1px solid var(--line);font-size:12px;color:var(--faint);
+  }
+  .codeblock pre{
+    margin:0;padding:12px 14px;overflow-x:auto;font-family:var(--mono);font-size:13px;line-height:1.55;
+    white-space:pre;tab-size:2;
+  }
+  .copy{
+    border:1px solid var(--line-strong);background:var(--bg);border-radius:3px;font-size:11.5px;
+    padding:3px 8px;color:var(--muted);white-space:nowrap
+  }
+  .copy:hover{background:var(--hover)}
+  .copy.ok{color:var(--green);border-color:var(--green)}
+  .ascii{
+    background:var(--gray-soft);border:1px solid var(--line);border-radius:var(--radius);
+    padding:14px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.45;color:var(--muted);
+  }
+  code.inline{background:var(--gray-soft);color:var(--code-text);font-family:var(--mono);font-size:.855em;padding:2px 5px;border-radius:3px}
+
+  /* signature element: prompt cards */
+  .prompt{
+    margin:18px 0;border:1px solid var(--line-strong);border-left:3px solid var(--blue);
+    border-radius:var(--radius);background:var(--bg);box-shadow:var(--shadow);
+  }
+  .prompt .p-head{
+    display:flex;align-items:center;justify-content:space-between;gap:10px;
+    padding:8px 10px 8px 14px;border-bottom:1px solid var(--line);
+  }
+  .p-title{font-size:12.5px;color:var(--muted);display:flex;align-items:center;gap:7px}
+  .p-title b{color:var(--text);font-weight:600;font-size:13px}
+  .prompt pre{
+    margin:0;padding:14px 16px;white-space:pre-wrap;font-family:var(--mono);font-size:12.8px;line-height:1.6;
+    max-height:260px;overflow:auto;
+  }
+  .prompt.open pre{max-height:none}
+  .p-foot{border-top:1px solid var(--line);padding:6px 12px}
+  .expand{background:none;border:0;font-size:12px;color:var(--blue);padding:2px 0}
+
+  /* ---------- steps ---------- */
+  .tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin:8px 0 26px}
+  .tab{
+    background:none;border:0;border-bottom:2px solid transparent;padding:8px 12px;font-size:14px;
+    color:var(--muted);margin-bottom:-1px;
+  }
+  .tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--text);font-weight:600}
+  .tab:hover{color:var(--text)}
+
+  .step{border-bottom:1px solid var(--line);padding:2px 0}
+  .step-head{display:flex;align-items:flex-start;gap:10px;padding:12px 4px}
+  .chk{
+    appearance:none;width:16px;height:16px;margin:5px 0 0;border:1.4px solid var(--line-strong);
+    border-radius:3px;flex:none;background:var(--bg);position:relative;cursor:pointer
+  }
+  .chk:checked{background:var(--blue);border-color:var(--blue)}
+  .chk:checked::after{
+    content:"";position:absolute;left:5px;top:1.5px;width:4px;height:9px;
+    border:solid #fff;border-width:0 2px 2px 0;transform:rotate(43deg)
+  }
+  .disclose{
+    flex:1;display:flex;align-items:baseline;gap:9px;background:none;border:0;text-align:left;
+    padding:0;font-size:16.5px;font-weight:600;letter-spacing:-.005em;
+  }
+  .caret{color:var(--faint);font-size:11px;transition:transform .15s ease;flex:none;margin-top:1px}
+  .step[open-state="1"] .caret{transform:rotate(90deg)}
+  .step-num{color:var(--faint);font-weight:500;font-variant-numeric:tabular-nums;flex:none}
+  .step.done .disclose{color:var(--faint);text-decoration:line-through;text-decoration-color:var(--line-strong)}
+  .step-body{display:none;padding:0 4px 22px 40px}
+  .step[open-state="1"] .step-body{display:block}
+  .step-body>*:first-child{margin-top:0}
+  .kicker{color:var(--muted);font-size:13.5px;margin-left:auto;flex:none;font-weight:400}
+
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));gap:10px;margin:18px 0}
+  .card{border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px;background:var(--bg)}
+  .card h4{margin:0 0 4px;font-size:14px;font-weight:600}
+  .card p{margin:0;font-size:13.5px;color:var(--muted)}
+
+  .can-list{list-style:none;padding:0;columns:2;column-gap:26px}
+  .can-list li{padding-left:20px;position:relative;break-inside:avoid;font-size:14.5px;margin:.35em 0}
+  .can-list li::before{content:"→";position:absolute;left:0;color:var(--faint);font-size:12px}
+
+  .empty{display:none;padding:40px 4px;color:var(--muted);font-size:14.5px}
+  .empty.show{display:block}
+
+  .totop{
+    position:fixed;right:22px;bottom:22px;border:1px solid var(--line-strong);background:var(--bg);
+    border-radius:50%;width:36px;height:36px;box-shadow:var(--shadow);display:none;place-items:center;color:var(--muted)
+  }
+  .totop.show{display:grid}
+
+  .scrim{display:none}
+  @media (max-width:900px){
+    .sidebar{
+      position:fixed;left:0;top:0;z-index:60;transform:translateX(-100%);transition:transform .2s ease;
+      box-shadow:0 0 40px rgba(0,0,0,.18)
+    }
+    .sidebar.open{transform:none}
+    .menu-btn{display:block}
+    .scrim.show{display:block;position:fixed;inset:0;background:rgba(0,0,0,.28);z-index:50}
+    h1{font-size:30px}
+    .can-list{columns:1}
+    .prop dt{width:96px}
+    .page{padding:0 18px 100px}
+    .step-body{padding-left:26px}
+  }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar" id="sidebar" aria-label="Guide navigation">
+    <div class="sb-head">
+      <div class="workspace">
+        <div class="ws-icon">💬</div>
+        <div style="min-width:0">
+          <div class="ws-name">WhatsApp AI Agent</div>
+          <div class="ws-sub">Build guide</div>
+        </div>
+      </div>
+      <label class="search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+        <input id="q" type="search" placeholder="Filter steps" aria-label="Filter steps">
+      </label>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-top"><span>Your progress</span><span id="pcount">0 / 0</span></div>
+      <div class="bar"><span id="pbar"></span></div>
+    </div>
+    <nav class="toc" id="toc"></nav>
+    <div class="sb-foot">
+      <button class="ghost" id="expandAll">Expand all</button>
+      <button class="ghost" id="theme">Dark mode</button>
+      <button class="ghost" id="reset" title="Uncheck every step">Reset</button>
+    </div>
+  </aside>
+  <div class="scrim" id="scrim"></div>
+
+  <main>
+    <div class="topbar">
+      <button class="menu-btn" id="menu" aria-label="Open navigation">☰</button>
+      <div class="crumb">Guides / <b>Build a WhatsApp AI agent with Claude Code</b></div>
+    </div>
+    <div class="cover"></div>
+    <div class="page">
+      <div class="page-icon">💬</div>
+      <h1>Build a WhatsApp AI agent with Claude Code</h1>
+      <p class="dek">A customer-facing assistant that answers questions, remembers the conversation, checks real availability and books appointments — running on your own server, connected straight to the Meta WhatsApp Cloud API.</p>
+
+      <dl class="props">
+        <div class="prop"><dt>Stack</dt><dd><span class="pill">Meta Cloud API</span><span class="pill">OpenRouter</span><span class="pill">VPS</span></dd></div>
+        <div class="prop"><dt>Two routes</dt><dd>Claude Code in VS Code, or Claude Code through the desktop app</dd></div>
+        <div class="prop"><dt>Working method</dt><dd>Plan → review → build → test → improve</dd></div>
+        <div class="prop"><dt>Time</dt><dd>A prototype in an afternoon. Production takes longer — see the reality check.</dd></div>
+      </dl>
+
+      <h2 id="overview">What you're building</h2>
+      <p class="lede">One message comes in from a customer, and this is the path it travels.</p>
+      <pre class="ascii" id="flowMain">Customer
+   ↓
+WhatsApp
+   ↓
+Meta WhatsApp Cloud API
+   ↓
+Webhook
+   ↓
+Your AI Agent
+   ↓
+┌───────────────────────┐
+│ Business Knowledge    │
+│ Conversation Memory   │
+│ LLM                   │
+│ Business Logic        │
+└───────────────────────┘
+   ↓
+Business Tools
+   ↓
+CRM / Database / Calendar / Booking API</pre>
+
+      <h3>What the agent can do</h3>
+      <ul class="can-list">
+        <li>Answer customer questions</li>
+        <li>Understand customer intent</li>
+        <li>Recommend products or services</li>
+        <li>Remember recent conversations</li>
+        <li>Collect customer information</li>
+        <li>Check appointment availability</li>
+        <li>Book appointments</li>
+        <li>Trigger external actions</li>
+        <li>Restart conversations on command</li>
+        <li>Run continuously on a VPS</li>
+      </ul>
+
+      <div class="callout info">
+        <span class="ci">🧭</span>
+        <div>
+          <p><b>Work in plan mode first.</b> Don't ask Claude Code to start coding straight away. Describe the business outcome, get an architecture back, correct it, then approve it.</p>
+          <p>Plan → Review → Build → Test → Improve, instead of Prompt → Code → Debug everything.</p>
+        </div>
+      </div>
+
+      <h2 id="routes">Pick your route</h2>
+      <p class="lede">Same workflow, different surface. Claude Code does the project work either way.</p>
+      <div class="tabs" role="tablist">
+        <button class="tab" role="tab" id="tab-vscode" aria-selected="true" data-route="vscode">Claude Code in VS Code</button>
+        <button class="tab" role="tab" id="tab-desktop" aria-selected="false" data-route="desktop">Claude Desktop</button>
+      </div>
+      <div id="steps"></div>
+      <p class="empty" id="empty">No steps match that filter. Clear the box to see everything again.</p>
+
+      <h2 id="architecture">Recommended architecture</h2>
+      <p class="lede">How the pieces sit together once everything is wired up.</p>
+      <pre class="ascii">                    CUSTOMER
+                       │
+                       ▼
+                   WhatsApp
+                       │
+                       ▼
+                Meta Cloud API
+                       │
+                       ▼
+                    Webhook
+                       │
+                       ▼
+              ┌────────────────┐
+              │    AI Agent    │
+              └────────────────┘
+                 │    │    │
+        ┌────────┘    │    └─────────┐
+        ▼             ▼              ▼
+     Memory       OpenRouter      Business
+                                 Knowledge
+        │             │              │
+        └─────────────┼──────────────┘
+                      ▼
+                 Tool Calling
+                      │
+             ┌────────┼────────┐
+             ▼        ▼        ▼
+          Booking    CRM    Database
+             │
+             ▼
+        Appointment</pre>
+      <div class="grid">
+        <div class="card"><h4>Memory</h4><p>Recent messages, replayed as context so the agent doesn't lose the thread.</p></div>
+        <div class="card"><h4>OpenRouter</h4><p>One API in front of many models. Swap models by changing an environment variable.</p></div>
+        <div class="card"><h4>Business knowledge</h4><p>Services, pricing and policies kept outside the application code.</p></div>
+        <div class="card"><h4>Tool calling</h4><p>How the agent checks a real calendar instead of guessing at availability.</p></div>
+      </div>
+
+      <h2 id="master">The master prompt</h2>
+      <p class="lede">If you only copy one thing from this page, copy this. It starts the project properly.</p>
+      <div id="masterPrompt"></div>
+
+      <h2 id="reality">Reality check</h2>
+      <div class="callout warn">
+        <span class="ci">⏱️</span>
+        <div><p><b>"Thirty minutes and you're done" is a content hook.</b> Treat it as a rapid prototype target, not a promise of production readiness. The real work is authentication, webhook verification, secret management, retries, API failures, logging, database design, concurrency, deployment, monitoring and testing.</p></div>
+      </div>
+      <div class="callout stop">
+        <span class="ci">📅</span>
+        <div><p><b>Don't copy deprecated calendar API steps.</b> Always verify current API versions and documentation for breaking changes before implementing calendar booking logic.</p></div>
+      </div>
+      <div class="callout">
+        <span class="ci">🔑</span>
+        <div><p><b>OpenRouter is the easy part.</b> Create an API key, set the endpoint and model, keep the key in an environment variable. Never paste production credentials into screenshots, public prompts, GitHub or a carousel.</p></div>
+      </div>
+
+      <h3>The simplest mental model</h3>
+      <div class="grid">
+        <div class="card"><h4>Claude Code</h4><p>Builds the application.</p></div>
+        <div class="card"><h4>Meta</h4><p>Connects WhatsApp.</p></div>
+        <div class="card"><h4>OpenRouter</h4><p>Provides the AI model.</p></div>
+        <div class="card"><h4>Memory</h4><p>Gives the agent context.</p></div>
+        <div class="card"><h4>Booking API</h4><p>Lets it book.</p></div>
+        <div class="card"><h4>A VPS</h4><p>Keeps it running 24/7.</p></div>
+      </div>
+    </div>
+  </main>
+</div>
+<button class="totop" id="totop" aria-label="Back to top">↑</button>
+
+<script>
+/* ------------------------------------------------------------------ content */
+const P = (x) => ({t:'p', x});
+const UL = (...x) => ({t:'ul', x});
+const OL = (...x) => ({t:'ol', x});
+const H = (x) => ({t:'h', x});
+const CODE = (label, x) => ({t:'code', label, x});
+const ASCII = (x) => ({t:'ascii', x});
+const NOTE = (kind, icon, x) => ({t:'note', kind, icon, x});
+const PROMPT = (title, x) => ({t:'prompt', title, x});
+
+const ROUTES = {
+vscode: [
+{
+  n:1, title:'Install the tools', kicker:'Setup',
+  body:[
+    P('Everything you need before the first prompt:'),
+    UL('VS Code','Claude Code','A Claude account or supported authentication','A Meta Developer account','WhatsApp Business setup','An OpenRouter account','A booking or calendar service account, if you want booking','A VPS for production deployment'),
+    P('Create a project folder and open it in VS Code:'),
+    CODE('folder','whatsapp-ai-agent')
+  ]
+},
+{
+  n:2, title:'Open Claude Code and plan first', kicker:'Method',
+  body:[
+    P('Install the Claude Code extension in VS Code and authenticate your account.'),
+    P('Once it is available, resist the urge to ask for code. Use plan mode. This is the most important habit in the whole workflow.'),
+    ASCII('Plan → Review → Build → Test → Improve\n\ninstead of\n\nPrompt → Code → Debug everything')
+  ]
+},
+{
+  n:3, title:'Give Claude the first prompt', kicker:'Prompt',
+  body:[
+    P('Start with the business outcome, not the implementation.'),
+    PROMPT('First prompt — architecture only',
+`I want to build a WhatsApp AI assistant for my business.
+
+The business is a pet salon and spa.
+
+The assistant should:
+
+1. Answer customer questions
+2. Explain our services
+3. Provide pricing information
+4. Understand what the customer needs
+5. Recommend relevant services
+6. Help customers book appointments
+7. Collect name and email when required
+8. Use the customer's WhatsApp number automatically
+9. Check appointment availability
+10. Book appointments
+11. Remember recent conversation context
+12. Know the current date and time
+13. Allow the user to type "restart" to start a fresh conversation
+
+The assistant should be friendly and conversational.
+
+It should ask only one question at a time.
+
+It should not immediately push new customers toward booking.
+
+First understand what they need, answer their questions and recommend something appropriate.
+
+Only suggest booking when it makes sense.
+
+Create a complete architectural plan for this application.
+
+Do not start implementing yet.`),
+    NOTE('info','💡','This works because you are describing what you want rather than how to code it. Claude picks the architecture, language, files and implementation strategy.')
+  ]
+},
+{
+  n:4, title:'Review the architecture it proposes', kicker:'Review',
+  body:[
+    P('Claude will come back with something along these lines:'),
+    ASCII('Python / Node.js\n        ↓\n   WhatsApp API\n        ↓\n     Webhook\n        ↓\n    AI Service\n        ↓\n      Memory\n        ↓\n  Business Logic\n        ↓\n   Booking API'),
+    P('Read the plan before letting it build. In the original walkthrough two swaps were made at this point: Twilio was replaced with the Meta WhatsApp Cloud API for direct integration, and the Claude API was replaced with OpenRouter for flexibility across models. OpenRouter currently fronts hundreds of models through one API.')
+  ]
+},
+{
+  n:5, title:'Send your real requirements back', kicker:'Prompt',
+  body:[
+    P('Now correct the plan with the constraints you actually have.'),
+    PROMPT('Architecture feedback',
+`Update the architecture with these requirements:
+
+1. Use Meta WhatsApp Cloud API directly.
+2. Do not use Twilio.
+3. Use OpenRouter for the AI model.
+4. Store conversation history.
+5. Send the most recent 15 messages to the model as context.
+6. Keep the system prompt in a separate editable file.
+7. Keep business information separate from application code.
+8. Use the customer's WhatsApp number automatically.
+9. Do not ask the customer for their phone number.
+10. Add booking integration for appointment booking.
+11. The agent must check available slots before booking.
+12. The agent must collect name, email and booking notes.
+13. The agent must know the current date and time.
+14. Typing "restart" should clear the conversation state.
+15. The application should be designed for production deployment.
+16. Use environment variables for all secrets.
+17. Do not hardcode API keys.
+18. Add proper error handling and logging.
+
+Update the architectural plan before implementation.`)
+  ]
+},
+{
+  n:6, title:'Let Claude build the project', kicker:'Build',
+  body:[
+    P('Once the plan is right, approve it and let it write everything.'),
+    PROMPT('Implementation',
+`The architecture is approved.
+
+Now implement the complete application.
+
+Build the project end-to-end.
+
+Create all required files.
+
+Use clean production-quality code.
+
+Create:
+
+- WhatsApp webhook
+- WhatsApp message handling
+- AI service
+- OpenRouter integration
+- Conversation memory
+- Business system prompt
+- Business configuration
+- Booking integration
+- Environment configuration
+- Error handling
+- Logging
+- Restart conversation functionality
+- Health check endpoint
+
+Before asking me to test something, inspect the implementation and fix obvious issues yourself.
+
+Do not hardcode secrets.
+
+Create a .env.example file showing every required environment variable.
+
+Also create a README explaining how to run the project.`),
+    P('A reasonable structure looks like this, though the exact shape will vary:'),
+    ASCII(`whatsapp-ai-agent/
+
+├── src/
+│   ├── server
+│   ├── whatsapp
+│   ├── ai
+│   ├── memory
+│   ├── booking
+│   └── utils
+│
+├── prompts/
+│   └── system_prompt.txt
+│
+├── .env
+├── .env.example
+├── README.md
+└── package.json / requirements.txt`),
+    NOTE('','🧱','Let Claude choose the language and layout unless you have a specific technical preference.')
+  ]
+},
+{
+  n:7, title:'Create the Meta WhatsApp app', kicker:'Meta',
+  body:[
+    P('Go to Meta Developers, create a new application and choose WhatsApp, then configure your business portfolio. Meta provides a test number for development.'),
+    P('You will collect four values:'),
+    CODE('.env',
+`WHATSAPP_PHONE_NUMBER_ID=...
+WHATSAPP_ACCESS_TOKEN=...
+WHATSAPP_APP_SECRET=...
+WHATSAPP_VERIFY_TOKEN=...`),
+    NOTE('stop','🔒','Never put these in source code. They belong in .env, and .env belongs in .gitignore.')
+  ]
+},
+{
+  n:8, title:'Understand the webhook', kicker:'Concept',
+  body:[
+    P('This is the piece worth understanding properly. When someone sends a message:'),
+    ASCII('Customer\n   ↓\nWhatsApp\n   ↓\nMeta\n   ↓\nWebhook URL\n   ↓\nYour application'),
+    P('Your application pulls out the customer phone number, the message, the message ID and the timestamp. Then:'),
+    ASCII('Message\n   ↓\nConversation memory\n   ↓\nSystem prompt\n   ↓\nLLM\n   ↓\nAI response\n   ↓\nMeta WhatsApp API\n   ↓\nCustomer')
+  ]
+},
+{
+  n:9, title:'Configure the webhook URL', kicker:'Meta',
+  body:[
+    P('During local development you need a public HTTPS endpoint, so run a tunnel to your local server.'),
+    ASCII('Local server\n     ↓\n   Tunnel\n     ↓\nPublic HTTPS URL\n     ↓\n Meta Webhook'),
+    P('If your endpoint is /webhook, the callback URL becomes something like:'),
+    CODE('callback URL','https://your-temporary-url.com/webhook'),
+    NOTE('warn','⚠️','Meta also asks for a verify token. The value you enter in Meta must match the one your application expects, or verification fails.')
+  ]
+},
+{
+  n:10, title:'Subscribe to WhatsApp messages', kicker:'Meta',
+  body:[
+    P('In the WhatsApp configuration, save the webhook and then subscribe to the messaging events.'),
+    ASCII('New WhatsApp message → Meta sends webhook event → your application processes it')
+  ]
+},
+{
+  n:11, title:'Create your OpenRouter account', kicker:'Model',
+  body:[
+    P('Generate an API key. OpenRouter uses an OpenAI-compatible API, and its documentation supplies the key through an environment variable.'),
+    CODE('.env','OPENROUTER_API_KEY=...\nOPENROUTER_MODEL=...'),
+    P('With the key and model both in configuration, you can change models without touching the WhatsApp integration.')
+  ]
+},
+{
+  n:12, title:'Choose the AI model', kicker:'Model',
+  body:[
+    P('Keep the model configurable instead of buried in the code.'),
+    CODE('.env','OPENROUTER_MODEL=your-model-id'),
+    P('OpenRouter identifies models as provider/model, so switching usually means changing that identifier rather than rewriting the integration.'),
+    ASCII('Model A\n   ↓\nModel B\n   ↓\nModel C\n\n...without rebuilding the WhatsApp layer.')
+  ]
+},
+{
+  n:13, title:'Write the system prompt', kicker:'Behaviour',
+  body:[
+    P('This file is where the agent\u2019s behaviour lives. Create prompts/system_prompt.txt and replace the sample business details with your own.'),
+    PROMPT('prompts/system_prompt.txt',
+`You are Coco, the WhatsApp AI assistant for Petsee Pet Salon & Spa.
+
+Your job is to help customers understand our services,
+answer their questions and help them book appointments.
+
+PERSONALITY
+
+Be friendly, helpful and conversational.
+
+Never overwhelm the customer.
+
+Ask only one question at a time.
+
+CUSTOMER FLOW
+
+Start by understanding what the customer needs.
+
+Do not immediately ask for their name.
+
+Do not immediately push them toward booking.
+
+If the customer asks about services, explain them.
+
+If the customer asks about pricing, provide the relevant pricing.
+
+If the customer shows booking intent, offer to help them book.
+
+BOOKING
+
+Collect:
+- Name
+- Email
+- Service
+- Relevant booking information
+- Additional notes if required
+
+Never ask for their WhatsApp phone number.
+
+Use the phone number from the incoming WhatsApp message.
+
+CONVERSATION
+
+Use recent conversation history to understand context.
+
+If the user types "restart", clear the conversation and respond:
+
+"Conversation restarted. How can I help you?"
+
+CURRENT DATE
+
+Always use the current date and time when discussing availability.
+
+IMPORTANT
+
+Never invent appointment availability.
+
+Always check the booking system before confirming a slot.`)
+  ]
+},
+{
+  n:14, title:'Add conversation memory', kicker:'Memory',
+  body:[
+    P('Without memory, every message arrives as if it were the first one. With it, the exchange holds together:'),
+    ASCII('User: How much is grooming?\nAI:   Grooming starts at ₹500.\nUser: I have a German Shepherd.\nAI:   Great. For a German Shepherd...'),
+    P('So instead of sending only the latest line, send the previous conversation plus the current message. A simple version keeps the last 15 messages.'),
+    NOTE('','🗄️','As traffic grows, move memory into a proper database or a Redis-backed store rather than keeping it in process.')
+  ]
+},
+{
+  n:15, title:'Add the booking integration', kicker:'Booking',
+  body:[
+    NOTE('warn','⚠️','Follow current booking service documentation. Be aware of API version updates, as older tutorial steps may not work.'),
+    P('The agent must never announce that 11 AM is free. It has to ask the calendar.'),
+    ASCII('Customer wants appointment\n        ↓\nAsk required information\n        ↓\nCheck availability\n        ↓\nReturn available slots\n        ↓\nCustomer chooses slot\n        ↓\nCreate booking\n        ↓\nConfirm booking')
+  ]
+},
+{
+  n:16, title:'Make it conversational, not an interrogation', kicker:'Tuning',
+  body:[
+    P('The first build almost always asks too much:'),
+    ASCII('What pet?\nWhat breed?\nWhat size?\nWhat hair type?\nWhat issue?\nWhat service?\nWhat...'),
+    P('That is friction. Aim for this instead:'),
+    ASCII('Customer:\nI have a German Shepherd. How much is grooming?\n\nAgent:\nA full groom for a German Shepherd starts at ₹X.\n\nWould you like me to check available appointments?'),
+    P('The agent should gather only the information it genuinely needs to answer or to book.')
+  ]
+},
+{
+  n:17, title:'Test the agent', kicker:'Test',
+  body:[
+    P('Start simple and work up. Six tests worth running every time you change behaviour:'),
+    OL('“Hi” → a friendly greeting and an offer to help.',
+       '“What services do you offer?” → the relevant services.',
+       '“How much does grooming cost?” → correct pricing.',
+       '“I want to book” → the booking flow starts.',
+       '“Is tomorrow at 3 PM available?” → a real availability check.',
+       '“restart” → the conversation state is cleared.')
+  ]
+},
+{
+  n:18, title:'Give Claude the test results', kicker:'Loop',
+  body:[
+    P('Don\u2019t hand-patch everything. Report what happened and let Claude find the root cause.'),
+    PROMPT('Feedback prompt',
+`I tested the WhatsApp agent.
+
+Here are the issues:
+
+1. It asks too many questions.
+2. It asks for the phone number even though WhatsApp already provides it.
+3. It sometimes suggests booking without checking availability.
+4. The booking API returned an error.
+
+Analyze the implementation.
+
+Find the root causes.
+
+Fix them.
+
+Then run whatever local tests you can perform before asking me to test again.`),
+    ASCII('Build → Test → Feedback → Fix → Test')
+  ]
+},
+{
+  n:19, title:'Handle the failures', kicker:'Reliability',
+  body:[
+    P('Production means things break in public. Cover at least:'),
+    UL('LLM timeout','WhatsApp API failure','Booking API failure','Invalid message','Expired credential','Rate limit','Database failure','A request the agent cannot handle'),
+    P('The customer should get a calm sentence, not a stack trace:'),
+    ASCII("I'm having trouble checking availability right now.\nPlease try again in a moment."),
+    P('The real technical error goes to your server logs.')
+  ]
+},
+{
+  n:20, title:'Move from testing to production', kicker:'Deploy',
+  body:[
+    P('A laptop is not a host.'),
+    ASCII('Laptop OFF\n    =\nAgent OFF'),
+    P('Move it to a server so the webhook is always reachable:'),
+    ASCII('VPS\n ↓\nYour application\n ↓\nWhatsApp webhook')
+  ]
+},
+{
+  n:21, title:'Deploy to a VPS', kicker:'Deploy',
+  body:[
+    P('Hostinger, DigitalOcean, AWS, Railway, Render — the provider does not change the architecture. You need a Linux VPS, a runtime, environment variables, the application, HTTPS and a process manager.'),
+    PROMPT('Deployment prompt',
+`I want to deploy this WhatsApp AI agent to my VPS.
+
+First inspect the project.
+
+Create a production deployment plan.
+
+Then configure:
+
+- Production environment
+- Environment variables
+- Process management
+- HTTPS
+- Webhook endpoint
+- Logging
+- Automatic restart
+- Health check
+
+Do not expose any API keys.
+
+After deployment, give me the production webhook URL.`)
+  ]
+},
+{
+  n:22, title:'Point Meta at production', kicker:'Meta',
+  body:[
+    P('Swap the temporary tunnel URL for your real domain in the Meta webhook settings:'),
+    ASCII('https://temporary-url.com/webhook\n            ↓\nhttps://yourdomain.com/webhook'),
+    P('Then run the full round trip one more time:'),
+    ASCII('WhatsApp\n   ↓\nMeta\n   ↓\nProduction webhook\n   ↓\nVPS\n   ↓\nAI\n   ↓\nWhatsApp')
+  ]
+}
+],
+
+desktop: [
+{
+  n:1, title:'Open Claude Desktop and create the workspace', kicker:'Setup',
+  body:[
+    P('Claude Desktop gives you a more visual, conversational surface. Claude Code is still the agent doing the project work underneath.'),
+    ASCII('Claude Desktop\n       ↓\n  Claude Code\n       ↓\nYour project folder\n       ↓\nFiles + Code + Terminal\n       ↓\nWhatsApp AI Agent'),
+    P('Create or select a workspace for the project, for example “WhatsApp AI Agent”.'),
+    NOTE('info','🖥️','The advantage for a non-technical user: you talk to Claude instead of living in a terminal.')
+  ]
+},
+{
+  n:2, title:'Give it the same planning prompt', kicker:'Prompt',
+  body:[
+    PROMPT('Planning prompt',
+`I want to build a production-ready WhatsApp AI agent.
+
+Before writing code, understand the requirements,
+ask only the questions that are necessary,
+and create a complete implementation plan.
+
+The agent should:
+
+- Receive WhatsApp messages
+- Answer customer questions
+- Use business knowledge
+- Maintain conversation memory
+- Use OpenRouter for the LLM
+- Check appointment availability
+- Book appointments through a calendar API
+- Support restart functionality
+- Use the customer's WhatsApp number automatically
+- Run through a webhook
+- Be deployable to a VPS
+
+Start with architecture and planning only.
+Do not implement yet.`)
+  ]
+},
+{
+  n:3, title:'Approve the plan and let it build', kicker:'Build',
+  body:[
+    PROMPT('Implementation prompt',
+`The plan is approved.
+
+Now implement the complete project.
+
+Create all required files.
+
+Use environment variables for secrets.
+
+Create:
+- .env.example
+- system prompt
+- WhatsApp integration
+- OpenRouter integration
+- memory
+- booking integration
+- webhook
+- error handling
+- logging
+- README
+- tests
+
+After implementation, inspect the entire project for obvious issues.`)
+  ]
+},
+{
+  n:4, title:'Keep developing in conversation', kicker:'Loop',
+  body:[
+    P('This is where the desktop route earns its place. Describe the change and scope it tightly.'),
+    PROMPT('Behaviour change',
+`The agent asks too many questions.
+
+Reduce the booking flow to 2-3 qualifying questions.
+
+Do not change the existing WhatsApp integration.
+
+Update the system prompt and relevant logic.
+
+Then test the affected functionality.`),
+    PROMPT('Bug fix',
+`The booking API is returning an error.
+
+Inspect the booking integration.
+
+Find the root cause.
+
+Fix it.
+
+Do not rewrite unrelated parts of the application.`)
+  ]
+},
+{
+  n:5, title:'Connect the external services yourself', kicker:'Accounts',
+  body:[
+    P('Claude can build the application around your credentials, but you still create the accounts and paste the values into .env.'),
+    UL('Meta — phone number ID, access token, app secret, webhook',
+       'OpenRouter — API key and model',
+       'Booking API — credentials, event configuration, availability',
+       'VPS — server, SSH credentials, domain, HTTPS, environment variables'),
+    NOTE('stop','🔒','Never paste production credentials into screenshots, public prompts, GitHub or a carousel.')
+  ]
+}
+]
+};
+
+const MASTER = `You are a senior AI engineer helping me build a production-ready WhatsApp AI agent.
+
+I want to build a customer-facing WhatsApp AI assistant for my business.
+
+OBJECTIVE
+
+The assistant should communicate with customers through WhatsApp and help them with customer support, recommendations and appointment booking.
+
+CORE REQUIREMENTS
+
+1. Use Meta WhatsApp Cloud API directly.
+2. Receive incoming messages through a webhook.
+3. Send responses back through the WhatsApp API.
+4. Use OpenRouter as the LLM gateway.
+5. Keep the AI model configurable through environment variables.
+6. Maintain conversation memory.
+7. Use the most recent conversation history as context.
+8. Keep the system prompt in a separate editable file.
+9. Keep business information separate from application logic.
+10. Automatically use the customer's WhatsApp number.
+11. Never ask for the customer's phone number.
+12. Add appointment booking functionality.
+13. Check real availability before offering slots.
+14. Collect required customer information.
+15. Support a "restart" command that clears conversation state.
+16. Include current date and time awareness.
+17. Add robust error handling.
+18. Add logging.
+19. Never hardcode secrets.
+20. Create .env.example.
+21. Create documentation.
+22. Create tests.
+23. Make the application suitable for VPS deployment.
+24. Add health-check functionality.
+
+CONVERSATION RULES
+
+The assistant should be friendly and conversational.
+
+Ask only one question at a time.
+
+Do not immediately push customers into booking.
+
+First understand the customer's intent.
+
+Answer questions before recommending a booking.
+
+Keep conversations concise.
+
+Avoid unnecessary back-and-forth.
+
+Never claim an appointment is available without checking the booking system.
+
+ARCHITECTURE
+
+First create a complete architecture and implementation plan.
+
+Do not write the application yet.
+
+Explain:
+
+- Components
+- Data flow
+- API integrations
+- Database/memory approach
+- Security
+- Error handling
+- Deployment strategy
+- Testing strategy
+
+After I approve the plan, implement the project.
+
+During implementation, inspect your own work and fix obvious issues before asking me to test.
+
+Do not make assumptions about credentials.
+
+Ask me only when information genuinely cannot be generated or determined from the project.`;
+
+/* ------------------------------------------------------------------ render */
+const esc = s => String(s).replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+let uid = 0;
+
+function copyBtn(text, label){
+  const id = 'c'+(++uid);
+  window.__clip = window.__clip || {};
+  window.__clip[id] = text;
+  return `<button class="copy" data-copy="${id}">${label||'Copy'}</button>`;
+}
+
+function block(b){
+  switch(b.t){
+    case 'p':  return `<p>${b.x}</p>`;
+    case 'h':  return `<h3>${esc(b.x)}</h3>`;
+    case 'ul': return `<ul>${b.x.map(i=>`<li>${i}</li>`).join('')}</ul>`;
+    case 'ol': return `<ol>${b.x.map(i=>`<li>${i}</li>`).join('')}</ol>`;
+    case 'ascii': return `<pre class="ascii">${esc(b.x)}</pre>`;
+    case 'note': return `<div class="callout ${b.kind||''}"><span class="ci">${b.icon}</span><div><p>${b.x}</p></div></div>`;
+    case 'code': return `<div class="codeblock"><div class="cb-head"><span>${esc(b.label||'')}</span>${copyBtn(b.x)}</div><pre>${esc(b.x)}</pre></div>`;
+    case 'prompt': {
+      const long = b.x.split('\n').length > 12;
+      return `<div class="prompt">
+        <div class="p-head"><span class="p-title">✳️ <b>${esc(b.title)}</b></span>${copyBtn(b.x,'Copy prompt')}</div>
+        <pre>${esc(b.x)}</pre>
+        ${long?'<div class="p-foot"><button class="expand">Show full prompt</button></div>':''}
+      </div>`;
+    }
+  }
+  return '';
+}
+
+function renderSteps(route){
+  const wrap = document.getElementById('steps');
+  wrap.innerHTML = ROUTES[route].map(s => `
+    <section class="step" id="${route}-${s.n}" open-state="0" data-key="${route}-${s.n}">
+      <div class="step-head">
+        <input class="chk" type="checkbox" aria-label="Mark step ${s.n} done">
+        <button class="disclose" aria-expanded="false">
+          <span class="caret">▶</span>
+          <span class="step-num">${s.n}</span>
+          <span class="step-title">${esc(s.title)}</span>
+          <span class="kicker">${esc(s.kicker)}</span>
+        </button>
+      </div>
+      <div class="step-body">${s.body.map(block).join('')}</div>
+    </section>`).join('');
+  buildToc(route);
+  applyProgress();
+}
+
+document.getElementById('masterPrompt').innerHTML = block(PROMPT('Master prompt — start the project with this', MASTER));
+
+/* ------------------------------------------------------------------ toc */
+function buildToc(route){
+  const toc = document.getElementById('toc');
+  const steps = ROUTES[route].map(s =>
+    `<a class="sub" href="#${route}-${s.n}" data-key="${route}-${s.n}">${s.n}. ${esc(s.title)}</a>`).join('');
+  toc.innerHTML = `
+    <a class="top" href="#overview">What you're building</a>
+    <a class="top" href="#routes">${route==='vscode'?'Route: VS Code':'Route: Claude Desktop'}</a>
+    ${steps}
+    <a class="top" href="#architecture">Recommended architecture</a>
+    <a class="top" href="#master">The master prompt</a>
+    <a class="top" href="#reality">Reality check</a>`;
+  markTocDone();
+}
+
+/* ------------------------------------------------------------------ state */
+const KEY = 'whatsapp_guide:progress';
+let done = {};
+
+async function loadProgress(){
+  try{
+    if(window.storage){
+      const r = await window.storage.get(KEY);
+      if(r && r.value) done = JSON.parse(r.value);
+    }
+  }catch(e){ done = {}; }
+  applyProgress();
+}
+async function saveProgress(){
+  try{ if(window.storage) await window.storage.set(KEY, JSON.stringify(done)); }catch(e){}
+}
+function applyProgress(){
+  document.querySelectorAll('.step').forEach(s=>{
+    const on = !!done[s.dataset.key];
+    s.classList.toggle('done', on);
+    s.querySelector('.chk').checked = on;
+  });
+  const total = ROUTES.vscode.length + ROUTES.desktop.length;
+  const count = Object.values(done).filter(Boolean).length;
+  document.getElementById('pcount').textContent = count + ' / ' + total;
+  document.getElementById('pbar').style.width = (count/total*100) + '%';
+  markTocDone();
+}
+function markTocDone(){
+  document.querySelectorAll('#toc a.sub').forEach(a=>{
+    a.classList.toggle('done', !!done[a.dataset.key]);
+  });
+}
+
+/* ------------------------------------------------------------------ events */
+let route = 'vscode';
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.setAttribute('aria-selected', String(x===t)));
+    route = t.dataset.route;
+    renderSteps(route);
+    document.getElementById('q').value = '';
+    filter('');
+  });
+});
+
+document.addEventListener('click', async (e)=>{
+  const d = e.target.closest('.disclose');
+  if(d){
+    const step = d.closest('.step');
+    const open = step.getAttribute('open-state') === '1';
+    step.setAttribute('open-state', open?'0':'1');
+    d.setAttribute('aria-expanded', String(!open));
+    return;
+  }
+  const c = e.target.closest('.copy');
+  if(c){
+    const txt = window.__clip[c.dataset.copy];
+    try{ await navigator.clipboard.writeText(txt); }
+    catch(err){
+      const ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); ta.remove();
+    }
+    const old = c.textContent;
+    c.textContent = 'Copied'; c.classList.add('ok');
+    setTimeout(()=>{ c.textContent = old; c.classList.remove('ok'); }, 1400);
+    return;
+  }
+  const ex = e.target.closest('.expand');
+  if(ex){
+    const p = ex.closest('.prompt');
+    const open = p.classList.toggle('open');
+    ex.textContent = open ? 'Collapse prompt' : 'Show full prompt';
+    return;
+  }
+});
+
+document.addEventListener('change', e=>{
+  if(e.target.classList.contains('chk')){
+    const step = e.target.closest('.step');
+    done[step.dataset.key] = e.target.checked;
+    if(!e.target.checked) delete done[step.dataset.key];
+    applyProgress(); saveProgress();
+  }
+});
+
+/* filter */
+function filter(term){
+  const t = term.trim().toLowerCase();
+  let shown = 0;
+  document.querySelectorAll('.step').forEach(s=>{
+    const hit = !t || s.textContent.toLowerCase().includes(t);
+    s.style.display = hit ? '' : 'none';
+    if(hit) shown++;
+    if(t && hit) s.setAttribute('open-state','1');
+  });
+  document.getElementById('empty').classList.toggle('show', shown===0);
+  document.querySelectorAll('#toc a.sub').forEach(a=>{
+    const el = document.getElementById(a.dataset.key);
+    a.style.display = el && el.style.display !== 'none' ? '' : 'none';
+  });
+}
+document.getElementById('q').addEventListener('input', e=>filter(e.target.value));
+
+/* expand all */
+document.getElementById('expandAll').addEventListener('click', e=>{
+  const steps = [...document.querySelectorAll('.step')];
+  const anyClosed = steps.some(s=>s.getAttribute('open-state')==='0');
+  steps.forEach(s=>{
+    s.setAttribute('open-state', anyClosed?'1':'0');
+    s.querySelector('.disclose').setAttribute('aria-expanded', String(anyClosed));
+  });
+  e.target.textContent = anyClosed ? 'Collapse all' : 'Expand all';
+});
+
+/* theme */
+const themeBtn = document.getElementById('theme');
+themeBtn.addEventListener('click', ()=>{
+  const dark = document.documentElement.getAttribute('data-theme') === 'dark';
+  document.documentElement.setAttribute('data-theme', dark ? 'light' : 'dark');
+  themeBtn.textContent = dark ? 'Dark mode' : 'Light mode';
+});
+
+/* reset */
+document.getElementById('reset').addEventListener('click', ()=>{
+  done = {}; applyProgress(); saveProgress();
+});
+
+/* mobile nav */
+const sb = document.getElementById('sidebar'), scrim = document.getElementById('scrim');
+document.getElementById('menu').addEventListener('click', ()=>{ sb.classList.add('open'); scrim.classList.add('show'); });
+scrim.addEventListener('click', ()=>{ sb.classList.remove('open'); scrim.classList.remove('show'); });
+document.getElementById('toc').addEventListener('click', e=>{
+  if(e.target.tagName==='A' && window.innerWidth<=900){ sb.classList.remove('open'); scrim.classList.remove('show'); }
+});
+
+/* scroll spy + back to top */
+const totop = document.getElementById('totop');
+totop.addEventListener('click', ()=>window.scrollTo({top:0}));
+window.addEventListener('scroll', ()=>{
+  totop.classList.toggle('show', window.scrollY > 700);
+  const links = [...document.querySelectorAll('#toc a')];
+  let current = null;
+  links.forEach(a=>{
+    const el = document.querySelector(a.getAttribute('href'));
+    if(el && el.getBoundingClientRect().top <= 120) current = a;
+  });
+  links.forEach(a=>a.classList.toggle('active', a===current));
+}, {passive:true});
+
+renderSteps('vscode');
+loadProgress();
+</script>
+</body>
+</html>
